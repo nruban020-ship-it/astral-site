@@ -1,10 +1,16 @@
-const PROFILE_KEY = "astralProfile";
-const SESSION_KEY = "astralSession";
-const REVIEWS_KEY = "astralReviews";
 const SUPPORT_EMAIL = "sergeybruskov1@gmail.com";
 const MAX_ATTACHMENT_SIZE = 5 * 1024 * 1024;
+const SUPABASE_URL = "https://tdlqsnutibrnkodecwbk.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_0Th8PHpxHzSrMx6blRO2Yg_oe5L_ovR";
 
-document.addEventListener("DOMContentLoaded", () => {
+const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true
+  }
+});
+
+document.addEventListener("DOMContentLoaded", async () => {
   if (window.lucide) {
     window.lucide.createIcons({
       attrs: {
@@ -13,11 +19,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  initAccountModal();
   initHelpModal();
   initReviewModal();
   initShopModal();
   initDonateModal();
+  await initAccountModal();
 });
 
 function initBaseModal({ modalSelector, triggerSelector, closeSelector, onOpen }) {
@@ -27,11 +33,13 @@ function initBaseModal({ modalSelector, triggerSelector, closeSelector, onOpen }
   const triggers = document.querySelectorAll(triggerSelector);
   const closers = modal.querySelectorAll(closeSelector);
 
-  const openModal = () => {
+  const openModal = async () => {
     modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
     document.body.classList.add("modal-open");
-    if (onOpen) onOpen(modal);
+    if (onOpen) {
+      await onOpen(modal);
+    }
   };
 
   const closeModal = () => {
@@ -41,9 +49,9 @@ function initBaseModal({ modalSelector, triggerSelector, closeSelector, onOpen }
   };
 
   triggers.forEach((trigger) => {
-    trigger.addEventListener("click", (event) => {
+    trigger.addEventListener("click", async (event) => {
       event.preventDefault();
-      openModal();
+      await openModal();
     });
   });
 
@@ -72,22 +80,25 @@ function initShopModal() {
   const buttons = modalApi.modal.querySelectorAll("[data-plan]");
 
   buttons.forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
       const plan = button.dataset.plan || "Подписка";
       if (plan === "Обычная") {
         setMessage(message, "Обычная подписка уже доступна всем бесплатно.");
         return;
       }
 
-      const subject = `[Astral] Подписка ${plan}`;
-      const body = [
-        `Пользователь хочет оформить подписку: ${plan}.`,
-        "",
-        "После подключения платежей здесь будет автоматическая покупка."
-      ].join("\n");
-
-      window.location.href = buildMailto(subject, body);
-      setMessage(message, `Заявка на ${plan} подготовлена.`);
+      button.disabled = true;
+      try {
+        await insertRow("shop_orders", {
+          plan,
+          email: await getCurrentUserEmail()
+        });
+        setMessage(message, `Заявка на ${plan} сохранена. Когда подключим платежи, здесь появится настоящая покупка.`);
+      } catch (error) {
+        setMessage(message, getErrorMessage(error, "Не получилось сохранить заявку на подписку."));
+      } finally {
+        button.disabled = false;
+      }
     });
   });
 }
@@ -103,24 +114,31 @@ function initDonateModal() {
   const form = modalApi.modal.querySelector("[data-donate-form]");
   const message = modalApi.modal.querySelector("[data-donate-message]");
 
-  form?.addEventListener("submit", (event) => {
+  form?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const formData = new FormData(form);
-    const amount = String(formData.get("amount") || "").trim();
+    const amount = Number(formData.get("amount") || 0);
     const note = String(formData.get("message") || "").trim();
 
-    const subject = `[Astral] Донат $${amount}`;
-    const body = [
-      `Сумма: $${amount}`,
-      "",
-      "Комментарий:",
-      note || "Без комментария",
-      "",
-      "После подключения платежей здесь будет автоматический донат."
-    ].join("\n");
+    if (amount < 1) {
+      setMessage(message, "Минимальная сумма доната — 1 доллар.");
+      return;
+    }
 
-    window.location.href = buildMailto(subject, body);
-    setMessage(message, "Заявка на донат подготовлена.");
+    toggleFormBusy(form, true);
+    try {
+      await insertRow("donations", {
+        amount,
+        message: note || null
+      });
+        setMessage(message, "Спасибо. Донат сохранен в системе. Следующим шагом подключим настоящую оплату.");
+        form.reset();
+        form.elements.amount.value = "1";
+    } catch (error) {
+      setMessage(message, getErrorMessage(error, "Не получилось сохранить донат."));
+    } finally {
+      toggleFormBusy(form, false);
+    }
   });
 }
 
@@ -138,7 +156,7 @@ function initHelpModal() {
   const form = modalApi.modal.querySelector("[data-help-form]");
   const message = modalApi.modal.querySelector("[data-help-message]");
 
-  form?.addEventListener("submit", (event) => {
+  form?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const formData = new FormData(form);
     const type = String(formData.get("type") || "Обращение").trim();
@@ -152,17 +170,25 @@ function initHelpModal() {
       return;
     }
 
-    const bodyLines = [
-      `Тип обращения: ${type}`,
-      `Ваш email: ${email}`,
-      file ? `Файл: ${file.name} (${Math.round(file.size / 1024)} КБ)` : "Файл: не прикреплен",
-      "",
-      "Сообщение:",
-      text
-    ];
-
-    window.location.href = buildMailto(`[Astral] ${type}: ${subject}`, bodyLines.join("\n"));
-    setMessage(message, "Письмо подготовлено. Если нужен файл в письме, прикрепи его в почтовом приложении.");
+    toggleFormBusy(form, true);
+    try {
+      await insertRow("support_requests", {
+        request_type: type,
+        email,
+        subject,
+        message: text,
+        attachment_name: file?.name || null
+      });
+      setMessage(
+        message,
+        `Обращение сохранено. Автоматическую отправку на ${SUPPORT_EMAIL} подключим следующим шагом через почтовый сервис.`
+      );
+      form.reset();
+    } catch (error) {
+      setMessage(message, getErrorMessage(error, "Не получилось сохранить обращение."));
+    } finally {
+      toggleFormBusy(form, false);
+    }
   });
 }
 
@@ -185,11 +211,13 @@ function initReviewModal() {
   const starGroup = form.querySelector("[data-star-rating]");
   const defaultReviews = Array.from(track.children).map((card) => ({
     name: card.querySelector("strong")?.textContent || "Гость",
-    rating: card.querySelector("small")?.textContent || "",
+    rating: "",
     text: card.querySelector("p")?.textContent || ""
   }));
 
-  renderReviews();
+  renderReviews().catch((error) => {
+    console.error(error);
+  });
   setStars(0);
 
   stars.forEach((star) => {
@@ -207,48 +235,44 @@ function initReviewModal() {
     setStars(Number(ratingInput.value || 0));
   });
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const formData = new FormData(form);
     const review = {
       name: String(formData.get("name") || "").trim(),
-      rating: String(formData.get("rating") || "0"),
+      rating: Number(formData.get("rating") || 0),
       text: String(formData.get("text") || "").trim()
     };
 
-    if (Number(review.rating) < 1) {
+    if (review.rating < 1) {
       setMessage(message, "Выбери оценку от 1 до 5 звезд.");
       return;
     }
 
-    const reviews = getStoredReviews();
-    reviews.unshift(review);
-    localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews.slice(0, 20)));
-    renderReviews();
-    form.reset();
-    ratingInput.value = "0";
-    setStars(0);
-    setMessage(message, "Отзыв опубликован в ленте.");
-
-    const bodyLines = [
-      `Имя: ${review.name}`,
-      `Оценка: ${review.rating}/5`,
-      "",
-      "Отзыв:",
-      review.text
-    ];
-    window.location.href = buildMailto(`[Astral] Новый отзыв: ${review.rating}/5`, bodyLines.join("\n"));
+    toggleFormBusy(form, true);
+    try {
+      await insertRow("reviews", review);
+      await renderReviews();
+      form.reset();
+      ratingInput.value = "0";
+      setStars(0);
+      setMessage(message, "Отзыв опубликован в ленте.");
+    } catch (error) {
+      setMessage(message, getErrorMessage(error, "Не получилось опубликовать отзыв."));
+    } finally {
+      toggleFormBusy(form, false);
+    }
   });
 
-  function renderReviews() {
-    const stored = getStoredReviews();
-    const reviews = [...stored, ...defaultReviews];
+  async function renderReviews() {
+    const remoteReviews = await fetchReviews();
+    const reviews = remoteReviews.length ? remoteReviews : defaultReviews;
     const looped = [...reviews, ...reviews];
     track.innerHTML = looped.map(renderReviewCard).join("");
   }
 
   function renderReviewCard(review) {
-    const rating = review.rating ? `<small>${escapeHtml(review.rating)}</small>` : "";
+    const rating = review.rating ? `<small>${"★".repeat(Number(review.rating))}</small>` : "";
     return [
       '<article class="review-card">',
       `<strong>${escapeHtml(review.name || "Гость")}</strong>`,
@@ -265,11 +289,14 @@ function initReviewModal() {
   }
 }
 
-function initAccountModal() {
+async function initAccountModal() {
   const modalApi = initBaseModal({
     modalSelector: "#account-modal",
     triggerSelector: "[data-account-trigger]",
-    closeSelector: "[data-account-close]"
+    closeSelector: "[data-account-close]",
+    onOpen: async () => {
+      await refreshAccountState();
+    }
   });
   if (!modalApi) return;
 
@@ -298,23 +325,6 @@ function initAccountModal() {
     updateSignFromBirthday(editForm);
   });
 
-  modalApi.openModal = () => {};
-  document.querySelectorAll("[data-account-trigger]").forEach((trigger) => {
-    trigger.addEventListener("click", () => {
-      const profile = getStoredProfile();
-      const isLoggedIn = localStorage.getItem(SESSION_KEY) === "active";
-
-      clearMessages();
-      if (profile && isLoggedIn) {
-        renderProfile(profile);
-        showProfileView();
-      } else {
-        showAuthView();
-        setActiveAuthTab("login");
-      }
-    });
-  });
-
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
       setActiveAuthTab(tab.dataset.authTab);
@@ -322,82 +332,174 @@ function initAccountModal() {
     });
   });
 
-  loginForm.addEventListener("submit", (event) => {
+  loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const profile = getStoredProfile();
+    clearMessages();
+
     const formData = new FormData(loginForm);
-    const email = String(formData.get("email") || "").trim().toLowerCase();
+    const email = String(formData.get("email") || "").trim();
+    const password = String(formData.get("password") || "");
 
-    if (!profile) {
-      setMessage(loginMessage, "Профиль еще не создан. Перейди во вкладку регистрации.");
-      return;
+    toggleFormBusy(loginForm, true);
+    try {
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+
+      await refreshAccountState();
+      loginForm.reset();
+    } catch (error) {
+      setMessage(loginMessage, getErrorMessage(error, "Не получилось войти в профиль."));
+    } finally {
+      toggleFormBusy(loginForm, false);
     }
-
-    if ((profile.email || "").toLowerCase() !== email) {
-      setMessage(loginMessage, "Такой email не найден. Проверь адрес или зарегистрируйся.");
-      return;
-    }
-
-    localStorage.setItem(SESSION_KEY, "active");
-    renderProfile(profile);
-    showProfileView();
   });
 
-  registerForm.addEventListener("submit", (event) => {
+  registerForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+    clearMessages();
+
     const formData = new FormData(registerForm);
+    const birthday = String(formData.get("birthday") || "").trim();
+    const sign = getZodiacSign(birthday);
     const profile = {
       name: String(formData.get("name") || "").trim(),
       email: String(formData.get("email") || "").trim(),
-      birthday: String(formData.get("birthday") || "").trim(),
-      sign: getZodiacSign(String(formData.get("birthday") || "").trim())
+      birthDate: birthday,
+      zodiacSign: sign,
+      password: String(formData.get("password") || "")
     };
 
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-    localStorage.setItem(SESSION_KEY, "active");
-    renderProfile(profile);
-    showProfileView();
-    registerForm.reset();
-    registerForm.elements.sign.value = "";
+    toggleFormBusy(registerForm, true);
+    try {
+      const { data, error } = await supabaseClient.auth.signUp({
+        email: profile.email,
+        password: profile.password,
+        options: {
+          data: {
+            name: profile.name,
+            birth_date: profile.birthDate,
+            zodiac_sign: profile.zodiacSign
+          }
+        }
+      });
+      if (error) throw error;
+
+      if (data.session) {
+        await upsertProfile({
+          id: data.user.id,
+          name: profile.name,
+          email: profile.email,
+          birth_date: profile.birthDate,
+          zodiac_sign: profile.zodiacSign
+        });
+        await refreshAccountState();
+      } else {
+        setMessage(registerMessage, "Профиль создан. Подтверди email в письме от Supabase и потом войди.");
+        registerForm.reset();
+        registerForm.elements.sign.value = "";
+        setActiveAuthTab("login");
+      }
+    } catch (error) {
+      setMessage(registerMessage, getErrorMessage(error, "Не получилось создать профиль."));
+    } finally {
+      toggleFormBusy(registerForm, false);
+    }
   });
 
-  logoutButton.addEventListener("click", () => {
-    localStorage.removeItem(SESSION_KEY);
-    hideEditForm();
-    showAuthView();
-    setActiveAuthTab("login");
+  logoutButton.addEventListener("click", async () => {
+    clearMessages();
+    try {
+      await supabaseClient.auth.signOut();
+      showAuthView();
+      setActiveAuthTab("login");
+    } catch (error) {
+      setMessage(loginMessage, getErrorMessage(error, "Не получилось выйти из профиля."));
+    }
   });
 
-  editButton.addEventListener("click", () => {
-    const profile = getStoredProfile();
+  editButton.addEventListener("click", async () => {
+    const profile = await loadCurrentProfile();
     if (!profile) return;
 
     editForm.elements.name.value = profile.name || "";
     editForm.elements.email.value = profile.email || "";
-    editForm.elements.birthday.value = profile.birthday || "";
-    editForm.elements.sign.value = profile.sign || getZodiacSign(profile.birthday) || "";
+    editForm.elements.birthday.value = profile.birth_date || "";
+    editForm.elements.sign.value = profile.zodiac_sign || getZodiacSign(profile.birth_date) || "";
     showEditForm();
   });
 
   cancelEditButton.addEventListener("click", hideEditForm);
 
-  editForm.addEventListener("submit", (event) => {
+  editForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+    clearMessages();
+
+    const {
+      data: { user }
+    } = await supabaseClient.auth.getUser();
+
+    if (!user) {
+      setMessage(editMessage, "Сессия истекла. Войди еще раз.");
+      showAuthView();
+      setActiveAuthTab("login");
+      return;
+    }
+
     const formData = new FormData(editForm);
     const birthday = String(formData.get("birthday") || "").trim();
-    const profile = {
+    const sign = getZodiacSign(birthday);
+    const payload = {
       name: String(formData.get("name") || "").trim(),
       email: String(formData.get("email") || "").trim(),
-      birthday,
-      sign: getZodiacSign(birthday)
+      birth_date: birthday,
+      zodiac_sign: sign
     };
 
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-    localStorage.setItem(SESSION_KEY, "active");
-    renderProfile(profile);
-    hideEditForm();
-    setMessage(editMessage, "Изменения сохранены.");
+    toggleFormBusy(editForm, true);
+    try {
+      const { error: authError } = await supabaseClient.auth.updateUser({
+        email: payload.email,
+        data: {
+          name: payload.name,
+          birth_date: payload.birth_date,
+          zodiac_sign: payload.zodiac_sign
+        }
+      });
+      if (authError) throw authError;
+
+      await upsertProfile({
+        id: user.id,
+        ...payload
+      });
+
+      await refreshAccountState();
+      hideEditForm();
+      setMessage(
+        editMessage,
+        payload.email === user.email
+          ? "Изменения сохранены."
+          : "Изменения сохранены. Если ты сменил email, Supabase может попросить подтвердить новый адрес."
+      );
+    } catch (error) {
+      setMessage(editMessage, getErrorMessage(error, "Не получилось сохранить изменения."));
+    } finally {
+      toggleFormBusy(editForm, false);
+    }
   });
+
+  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+    if (!modal.classList.contains("is-open")) return;
+
+    if (session?.user) {
+      await refreshAccountState();
+    } else {
+      showAuthView();
+      setActiveAuthTab("login");
+      hideEditForm();
+    }
+  });
+
+  await refreshAccountState();
 
   function setActiveAuthTab(name) {
     tabs.forEach((tab) => {
@@ -422,8 +524,20 @@ function initAccountModal() {
   function renderProfile(profile) {
     modal.querySelector("[data-profile-name]").textContent = profile.name || "Пользователь";
     modal.querySelector("[data-profile-email]").textContent = profile.email || "email не указан";
-    modal.querySelector("[data-profile-sign]").textContent = profile.sign || "Не выбран";
-    modal.querySelector("[data-profile-birthday]").textContent = formatDate(profile.birthday);
+    modal.querySelector("[data-profile-sign]").textContent = profile.zodiac_sign || "Не выбран";
+    modal.querySelector("[data-profile-birthday]").textContent = formatDate(profile.birth_date);
+  }
+
+  async function refreshAccountState() {
+    clearMessages();
+    const profile = await loadCurrentProfile();
+    if (profile) {
+      renderProfile(profile);
+      showProfileView();
+    } else {
+      showAuthView();
+      setActiveAuthTab("login");
+    }
   }
 
   function showEditForm() {
@@ -452,31 +566,111 @@ function initAccountModal() {
   }
 }
 
-function getStoredProfile() {
-  try {
-    return JSON.parse(localStorage.getItem(PROFILE_KEY));
-  } catch {
+async function loadCurrentProfile() {
+  const {
+    data: { user },
+    error
+  } = await supabaseClient.auth.getUser();
+
+  if (error) {
+    console.error(error);
     return null;
   }
+
+  if (!user) return null;
+
+  const { data: profile, error: profileError } = await supabaseClient
+    .from("profiles")
+    .select("id, name, email, birth_date, zodiac_sign, subscription, forecast_type")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profileError) {
+    console.error(profileError);
+    return {
+      id: user.id,
+      name: user.user_metadata?.name || "Пользователь",
+      email: user.email || "",
+      birth_date: user.user_metadata?.birth_date || "",
+      zodiac_sign: user.user_metadata?.zodiac_sign || "",
+      subscription: "Обычная",
+      forecast_type: "День и неделя"
+    };
+  }
+
+  if (profile) return profile;
+
+  const fallbackProfile = {
+    id: user.id,
+    name: user.user_metadata?.name || "Пользователь",
+    email: user.email || "",
+    birth_date: user.user_metadata?.birth_date || "",
+    zodiac_sign: user.user_metadata?.zodiac_sign || getZodiacSign(user.user_metadata?.birth_date || ""),
+    subscription: "Обычная",
+    forecast_type: "День и неделя"
+  };
+
+  try {
+    await upsertProfile(fallbackProfile);
+  } catch (error) {
+    console.error(error);
+  }
+
+  return fallbackProfile;
 }
 
-function getStoredReviews() {
-  try {
-    const reviews = JSON.parse(localStorage.getItem(REVIEWS_KEY));
-    return Array.isArray(reviews) ? reviews : [];
-  } catch {
-    return [];
-  }
+async function upsertProfile(profile) {
+  const payload = {
+    id: profile.id,
+    name: profile.name,
+    email: profile.email,
+    birth_date: profile.birth_date || null,
+    zodiac_sign: profile.zodiac_sign || null,
+    subscription: profile.subscription || "Обычная",
+    forecast_type: profile.forecast_type || "День и неделя"
+  };
+
+  const { error } = await supabaseClient.from("profiles").upsert(payload, {
+    onConflict: "id"
+  });
+  if (error) throw error;
+}
+
+async function fetchReviews() {
+  const { data, error } = await supabaseClient
+    .from("reviews")
+    .select("name, rating, text, created_at")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (error) throw error;
+  return Array.isArray(data) ? data : [];
+}
+
+async function insertRow(table, payload) {
+  const { error } = await supabaseClient.from(table).insert(payload);
+  if (error) throw error;
+}
+
+async function getCurrentUserEmail() {
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
+
+  return user?.email || null;
+}
+
+function toggleFormBusy(form, isBusy) {
+  const controls = form.querySelectorAll("button, input, select, textarea");
+  controls.forEach((control) => {
+    control.disabled = isBusy;
+  });
 }
 
 function setMessage(element, text) {
   if (element) {
     element.textContent = text;
   }
-}
-
-function buildMailto(subject, body) {
-  return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 function formatDate(value) {
@@ -488,6 +682,11 @@ function formatDate(value) {
     month: "2-digit",
     year: "numeric"
   });
+}
+
+function getErrorMessage(error, fallback) {
+  if (!error) return fallback;
+  return error.message || fallback;
 }
 
 function escapeHtml(value) {
