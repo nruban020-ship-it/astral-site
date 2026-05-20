@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Astral | Гороскопы</title>
+    <meta
+      name="description"
+      content="Еженедельные гороскопы для всех знаков зодиака, свежие прогнозы и контакты проекта Astral."
+    >
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="assets/astral-logo.png">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header" aria-label="Главная навигация">
+        <a class="brand" href="#" aria-label="Astral, главная страница">
+          <img class="brand-logo" src="assets/astral-logo.png" alt="Astral">
+          <span class="brand-copy">
+            <span class="brand-name">Astral</span>
+            <span class="brand-tagline">твой космос. твой путь.</span>
+          </span>
+        </a>
+
+        <nav class="quick-actions" aria-label="Разделы и социальные сети">
+          <a href="#account" title="Личный кабинет" data-account-trigger>
+            <i data-lucide="user-round"></i>
+            <span>Личный кабинет</span>
+          </a>
+          <a href="#shop" title="Магазин" data-shop-trigger>
+            <i data-lucide="shopping-bag"></i>
+            <span>Магазин</span>
+          </a>
+          <a href="#donate" title="Донат" data-donate-trigger>
+            <i data-lucide="heart-handshake"></i>
+            <span>Донат</span>
+          </a>
+          <a href="#help" title="Помощь" data-help-trigger>
+            <i data-lucide="message-circle-heart"></i>
+            <span>Помощь</span>
+          </a>
+          <a href="#reviews" title="Отзыв" data-review-trigger>
+            <i data-lucide="star"></i>
+            <span>Отзыв</span>
+          </a>
+          <a href="#" title="Telegram" aria-label="Telegram">
+            <i data-lucide="send"></i>
+            <span>Telegram</span>
+          </a>
+          <a href="#" title="Instagram" aria-label="Instagram">
+            <i data-lucide="camera"></i>
+            <span>Instagram</span>
+          </a>
+          <a href="#" title="Discord" aria-label="Discord">
+            <i data-lucide="message-square"></i>
+            <span>Discord</span>
+          </a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="planet planet-left" aria-hidden="true"></div>
+          <div class="planet planet-right" aria-hidden="true"></div>
+          <div class="zodiac-wheel" aria-hidden="true">
+            <span>♈︎</span>
+            <span>♉︎</span>
+            <span>♊︎</span>
+            <span>♋︎</span>
+            <span>♌︎</span>
+            <span>♍︎</span>
+            <span>♎︎</span>
+            <span>♏︎</span>
+            <span>♐︎</span>
+            <span>♑︎</span>
+            <span>♒︎</span>
+            <span>♓︎</span>
+          </div>
+
+          <div class="hero-content">
+            <p class="eyebrow">еженедельный прогноз</p>
+            <h1 id="hero-title">Гороскопы</h1>
+            <p>
+              Узнай, что готовит новая неделя для твоего знака: настроение,
+              отношения, деньги, работа и личные открытия.
+            </p>
+            <div class="hero-actions">
+              <a class="primary-button" href="#zodiac">
+                Выбрать знак
+                <i data-lucide="sparkle"></i>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section class="weekly-note" id="forecast" aria-label="Короткий прогноз недели">
+          <article class="forecast-card">
+            <span class="section-kicker">прогноз недели</span>
+            <h2>Время прислушаться к знакам и выбрать спокойный темп</h2>
+            <p>
+              Каждую неделю здесь будут появляться свежие подсказки для всех
+              знаков зодиака: на что обратить внимание, где проявить смелость, а
+              где лучше сохранить энергию и действовать мягче.
+            </p>
+          </article>
+          <article class="forecast-card">
+            <span class="section-kicker">прогноз дня</span>
+            <h2>День для ясных мыслей, маленьких шагов и точных решений</h2>
+            <p>
+              Ежедневный прогноз будет помогать быстро понять настроение дня:
+              какие дела лучше начать сейчас, где не торопиться и на какие
+              знаки судьбы обратить особое внимание.
+            </p>
+          </article>
+        </section>
+
+        <section class="zodiac-section" id="zodiac" aria-labelledby="zodiac-title">
+          <div class="section-heading">
+            <span class="spark" aria-hidden="true">✦</span>
+            <h2 id="zodiac-title">Выбери свой знак</h2>
+            <span class="spark" aria-hidden="true">✦</span>
+          </div>
+
+          <div class="zodiac-grid">
+            <a class="zodiac-card" href="#" aria-label="Овен, 21.03 - 19.04">
+              <span class="sign-icon">
+                <img src="assets/aries.png" alt="Овен">
+              </span>
+              <span class="sign-name">Овен</span>
+              <span class="sign-date">21.03 - 19.04</span>
+              <span class="card-arrow">→</span>
+            </a>
+            <a class="zodiac-card" href="#" aria-label="Телец, 20.04 - 20.05">
+              <span class="sign-icon">
+                <img src="assets/taurus.png" alt="Телец">
+              </span>
+              <span class="sign-name">Телец</span>
+              <span class="sign-date">20.04 - 20.05</span>
+              <span class="card-arrow">→</span>
+            </a>
+            <a class="zodiac-card" href="#" aria-label="Близнецы, 21.05 - 20.06">
+              <span class="sign-icon">
+                <img src="assets/gemini.png" alt="Близнецы">
+              </span>
+              <span class="sign-name">Близнецы</span>
+              <span class="sign-date">21.05 - 20.06</span>
+              <span class="card-arrow">→</span>
+            </a>
+            <a class="zodiac-card" href="#" aria-label="Рак, 21.06 - 22.07">
+              <span class="sign-icon">
+                <img src="assets/cancer.png" alt="Рак">
+              </span>
+              <span class="sign-name">Рак</span>
+              <span class="sign-date">21.06 - 22.07</span>
+              <span class="card-arrow">→</span>
+            </a>
+            <a class="zodiac-card" href="#" aria-label="Лев, 23.07 - 22.08">
+              <span class="sign-icon">
+                <img src="assets/leo.png" alt="Лев">
+              </span>
+              <span class="sign-name">Лев</span>
+              <span class="sign-date">23.07 - 22.08</span>
+              <span class="card-arrow">→</span>
+            </a>
+            <a class="zodiac-card" href="#" aria-label="Дева, 23.08 - 22.09">
+              <span class="sign-icon">
+                <img src="assets/virgo.png" alt="Дева">
+              </span>
+              <span class="sign-name">Дева</span>
+              <span class="sign-date">23.08 - 22.09</span>
+              <span class="card-arrow">→</span>
+            </a>
+            <a class="zodiac-card" href="#" aria-label="Весы, 23.09 - 22.10">
+              <span class="sign-icon">
+                <img src="assets/libra.png" alt="Весы">
+              </span>
+              <span class="sign-name">Весы</span>
+              <span class="sign-date">23.09 - 22.10</span>
+              <span class="card-arrow">→</span>
+            </a>
+            <a class="zodiac-card" href="#" aria-label="Скорпион, 23.10 - 21.11">
+              <span class="sign-icon">
+                <img src="assets/scorpio.png" alt="Скорпион">
+              </span>
+              <span class="sign-name">Скорпион</span>
+              <span class="sign-date">23.10 - 21.11</span>
+              <span class="card-arrow">→</span>
+            </a>
+            <a class="zodiac-card" href="#" aria-label="Стрелец, 22.11 - 21.12">
+              <span class="sign-icon">
+                <img src="assets/sagittarius.png" alt="Стрелец">
+              </span>
+              <span class="sign-name">Стрелец</span>
+              <span class="sign-date">22.11 - 21.12</span>
+              <span class="card-arrow">→</span>
+            </a>
+            <a class="zodiac-card" href="#" aria-label="Козерог, 22.12 - 19.01">
+              <span class="sign-icon">
+                <img src="assets/capricorn.png" alt="Козерог">
+              </span>
+              <span class="sign-name">Козерог</span>
+              <span class="sign-date">22.12 - 19.01</span>
+              <span class="card-arrow">→</span>
+            </a>
+            <a class="zodiac-card" href="#" aria-label="Водолей, 20.01 - 18.02">
+              <span class="sign-icon">
+                <img src="assets/aquarius.png" alt="Водолей">
+              </span>
+              <span class="sign-name">Водолей</span>
+              <span class="sign-date">20.01 - 18.02</span>
+              <span class="card-arrow">→</span>
+            </a>
+            <a class="zodiac-card" href="#" aria-label="Рыбы, 19.02 - 20.03">
+              <span class="sign-icon">
+                <img src="assets/pisces.png" alt="Рыбы">
+              </span>
+              <span class="sign-name">Рыбы</span>
+              <span class="sign-date">19.02 - 20.03</span>
+              <span class="card-arrow">→</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="reviews-section" id="reviews" aria-labelledby="reviews-title">
+          <div class="section-heading">
+            <span class="spark" aria-hidden="true">✦</span>
+            <h2 id="reviews-title">Отзывы</h2>
+            <span class="spark" aria-hidden="true">✦</span>
+          </div>
+          <div class="reviews-marquee" aria-live="polite">
+            <div class="reviews-track" data-reviews-track>
+              <article class="review-card">
+                <strong>Анна</strong>
+                <p>Очень красивый сайт, хочется возвращаться за прогнозами каждый день.</p>
+              </article>
+              <article class="review-card">
+                <strong>Мария</strong>
+                <p>Понравилась атмосфера и карточки знаков. Все выглядит мистически и аккуратно.</p>
+              </article>
+              <article class="review-card">
+                <strong>Илья</strong>
+                <p>Удобно, что есть прогноз дня и недели. Жду личные прогнозы в кабинете.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="account-modal" id="account-modal" aria-hidden="true">
+      <div class="account-backdrop" data-account-close></div>
+      <section class="account-dialog" role="dialog" aria-modal="true" aria-labelledby="account-title">
+        <button class="modal-close" type="button" aria-label="Закрыть окно" data-account-close>
+          <i data-lucide="x"></i>
+        </button>
+
+        <div class="auth-view" data-auth-view>
+          <div class="modal-heading">
+            <span class="section-kicker">личный кабинет</span>
+            <h2 id="account-title">Войти в Astral</h2>
+            <p>Авторизуйся или создай профиль, чтобы позже сохранять избранный знак, подписки и персональные прогнозы.</p>
+          </div>
+
+          <div class="auth-tabs" role="tablist" aria-label="Авторизация">
+            <button class="auth-tab is-active" type="button" data-auth-tab="login">Вход</button>
+            <button class="auth-tab" type="button" data-auth-tab="register">Регистрация</button>
+          </div>
+
+          <form class="auth-form is-active" data-auth-form="login">
+            <label>
+              <span>Email</span>
+              <input type="email" name="email" autocomplete="email" placeholder="you@example.com" required>
+            </label>
+            <label>
+              <span>Пароль</span>
+              <input type="password" name="password" autocomplete="current-password" placeholder="Введите пароль" required>
+            </label>
+            <button class="primary-button auth-submit" type="submit">Войти</button>
+            <p class="form-message" data-login-message></p>
+          </form>
+
+          <form class="auth-form" data-auth-form="register">
+            <label>
+              <span>Имя</span>
+              <input type="text" name="name" autocomplete="name" placeholder="Как к тебе обращаться" required>
+            </label>
+            <label>
+              <span>Email</span>
+              <input type="email" name="email" autocomplete="email" placeholder="you@example.com" required>
+            </label>
+            <label>
+              <span>Дата рождения</span>
+              <input type="date" name="birthday" required>
+            </label>
+            <label>
+              <span>Твой знак</span>
+              <input type="text" name="sign" placeholder="Подберется по дате" readonly required>
+            </label>
+            <label>
+              <span>Пароль</span>
+              <input type="password" name="password" autocomplete="new-password" placeholder="Придумай пароль" minlength="4" required>
+            </label>
+            <button class="primary-button auth-submit" type="submit">Создать профиль</button>
+            <p class="form-message" data-register-message></p>
+          </form>
+        </div>
+
+        <div class="profile-view" data-profile-view hidden>
+          <div class="modal-heading">
+            <span class="section-kicker">мой astral</span>
+            <h2>Личный кабинет</h2>
+            <p>Твоя персональная зона: избранный знак, данные профиля и будущие настройки прогнозов.</p>
+          </div>
+
+          <div class="profile-summary">
+            <div class="profile-orbit" aria-hidden="true">
+              <i data-lucide="sparkles"></i>
+            </div>
+            <div>
+              <strong data-profile-name>Пользователь</strong>
+              <span data-profile-email>email@example.com</span>
+            </div>
+          </div>
+
+          <dl class="profile-details">
+            <div>
+              <dt>Знак зодиака</dt>
+              <dd data-profile-sign>Не выбран</dd>
+            </div>
+            <div>
+              <dt>Дата рождения</dt>
+              <dd data-profile-birthday>Не указана</dd>
+            </div>
+            <div>
+              <dt>Подписка</dt>
+              <dd>Базовый доступ</dd>
+            </div>
+            <div>
+              <dt>Прогнозы</dt>
+              <dd>День и неделя</dd>
+            </div>
+          </dl>
+
+          <form class="profile-edit-form" data-profile-edit-form hidden>
+            <label>
+              <span>Имя</span>
+              <input type="text" name="name" autocomplete="name" required>
+            </label>
+            <label>
+              <span>Email</span>
+              <input type="email" name="email" autocomplete="email" required>
+            </label>
+            <label>
+              <span>Дата рождения</span>
+              <input type="date" name="birthday" required>
+            </label>
+            <label>
+              <span>Твой знак</span>
+              <input type="text" name="sign" readonly required>
+            </label>
+            <button class="primary-button auth-submit" type="submit">Сохранить изменения</button>
+            <p class="form-message" data-edit-message></p>
+          </form>
+
+          <div class="profile-actions">
+            <button class="secondary-button" type="button" data-edit-profile>Изменить данные</button>
+            <button class="secondary-button" type="button" data-cancel-edit hidden>Отмена</button>
+            <button class="outline-button" type="button" data-logout>Выйти</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="account-modal" id="help-modal" aria-hidden="true">
+      <div class="account-backdrop" data-help-close></div>
+      <section class="account-dialog help-dialog" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <button class="modal-close" type="button" aria-label="Закрыть окно" data-help-close>
+          <i data-lucide="x"></i>
+        </button>
+
+        <div class="modal-heading">
+          <span class="section-kicker">помощь</span>
+          <h2 id="help-title">Написать в поддержку</h2>
+          <p>Здесь можно задать вопрос, отправить жалобу или описать проблему. Сообщение будет подготовлено для отправки на почту проекта.</p>
+        </div>
+
+        <form class="help-form" data-help-form>
+          <label>
+            <span>Тип обращения</span>
+            <select name="type" required>
+              <option value="Вопрос">Вопрос</option>
+              <option value="Жалоба">Жалоба</option>
+              <option value="Проблема с сайтом">Проблема с сайтом</option>
+              <option value="Другое">Другое</option>
+            </select>
+          </label>
+          <label>
+            <span>Ваш email</span>
+            <input type="email" name="email" autocomplete="email" placeholder="you@example.com" required>
+          </label>
+          <label>
+            <span>Файл</span>
+            <input type="file" name="attachment" accept="image/png,image/jpeg,image/webp">
+          </label>
+          <label>
+            <span>Тема</span>
+            <input type="text" name="subject" placeholder="Коротко о вопросе" required>
+          </label>
+          <label class="help-message-field">
+            <span>Сообщение</span>
+            <textarea name="message" rows="7" placeholder="Опиши вопрос или жалобу" required></textarea>
+          </label>
+          <button class="primary-button auth-submit" type="submit">Отправить обращение</button>
+          <p class="form-message" data-help-message></p>
+        </form>
+      </section>
+    </div>
+
+    <div class="account-modal" id="shop-modal" aria-hidden="true">
+      <div class="account-backdrop" data-shop-close></div>
+      <section class="account-dialog shop-dialog" role="dialog" aria-modal="true" aria-labelledby="shop-title">
+        <button class="modal-close" type="button" aria-label="Закрыть окно" data-shop-close>
+          <i data-lucide="x"></i>
+        </button>
+        <div class="modal-heading">
+          <span class="section-kicker">магазин</span>
+          <h2 id="shop-title">Подписки Astral</h2>
+          <p>Выбери уровень доступа. Бесплатная подписка доступна всем, Plus и Pro можно будет оплатить после подключения платежей.</p>
+        </div>
+        <div class="plans-grid">
+          <article class="plan-card">
+            <span>Обычная</span>
+            <strong>Бесплатно</strong>
+            <p>Гороскоп дня и недели, доступ к основным разделам сайта.</p>
+            <button class="secondary-button" type="button" data-plan="Обычная">Текущий доступ</button>
+          </article>
+          <article class="plan-card is-featured">
+            <span>Plus</span>
+            <strong>$9</strong>
+            <p>Расширенные прогнозы, сохранение избранного знака и ранний доступ к новым функциям.</p>
+            <button class="primary-button" type="button" data-plan="Plus">Выбрать Plus</button>
+          </article>
+          <article class="plan-card">
+            <span>Pro</span>
+            <strong>$19</strong>
+            <p>Персональные прогнозы, приоритетная поддержка и будущие закрытые материалы.</p>
+            <button class="primary-button" type="button" data-plan="Pro">Выбрать Pro</button>
+          </article>
+        </div>
+        <p class="form-message" data-shop-message></p>
+      </section>
+    </div>
+
+    <div class="account-modal" id="review-modal" aria-hidden="true">
+      <div class="account-backdrop" data-review-close></div>
+      <section class="account-dialog help-dialog" role="dialog" aria-modal="true" aria-labelledby="review-title">
+        <button class="modal-close" type="button" aria-label="Закрыть окно" data-review-close>
+          <i data-lucide="x"></i>
+        </button>
+
+        <div class="modal-heading">
+          <span class="section-kicker">отзыв</span>
+          <h2 id="review-title">Оставить отзыв</h2>
+          <p>Напиши, что думаешь о сайте, прогнозах, личном кабинете или общем настроении Astral.</p>
+        </div>
+
+        <form class="help-form" data-review-form>
+          <label>
+            <span>Имя</span>
+            <input type="text" name="name" autocomplete="name" placeholder="Как тебя подписать" required>
+          </label>
+          <label>
+            <span>Оценка</span>
+            <input type="hidden" name="rating" value="0" required>
+            <span class="star-rating" data-star-rating aria-label="Оценка от 1 до 5">
+              <button type="button" data-rating="1" aria-label="1 звезда">★</button>
+              <button type="button" data-rating="2" aria-label="2 звезды">★</button>
+              <button type="button" data-rating="3" aria-label="3 звезды">★</button>
+              <button type="button" data-rating="4" aria-label="4 звезды">★</button>
+              <button type="button" data-rating="5" aria-label="5 звезд">★</button>
+            </span>
+          </label>
+          <label class="help-message-field">
+            <span>Отзыв</span>
+            <textarea name="text" rows="7" placeholder="Напиши свой отзыв" required></textarea>
+          </label>
+          <button class="primary-button auth-submit" type="submit">Опубликовать отзыв</button>
+          <p class="form-message" data-review-message></p>
+        </form>
+      </section>
+    </div>
+
+    <div class="account-modal" id="donate-modal" aria-hidden="true">
+      <div class="account-backdrop" data-donate-close></div>
+      <section class="account-dialog donate-dialog" role="dialog" aria-modal="true" aria-labelledby="donate-title">
+        <button class="modal-close" type="button" aria-label="Закрыть окно" data-donate-close>
+          <i data-lucide="x"></i>
+        </button>
+        <div class="modal-heading">
+          <span class="section-kicker">донат</span>
+          <h2 id="donate-title">Поддержать Astral</h2>
+          <p>Можно пожертвовать любую сумму на развитие сайта, прогнозов и будущих сервисов.</p>
+        </div>
+        <form class="help-form" data-donate-form>
+          <label>
+            <span>Сумма в долларах</span>
+            <input type="number" name="amount" min="1" step="1" value="1" required>
+          </label>
+          <label class="help-message-field">
+            <span>Комментарий</span>
+            <textarea name="message" rows="5" placeholder="Можно оставить пожелание"></textarea>
+          </label>
+          <button class="primary-button auth-submit" type="submit">Поддержать проект</button>
+          <p class="form-message" data-donate-message></p>
+        </form>
+      </section>
+    </div>
+  </body>
+</html>
